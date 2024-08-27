@@ -3,7 +3,11 @@ import datetime
 import pandas as pd
 from newsapi import NewsApiClient
 from textblob import TextBlob
+from urllib.request import urlopen
+import certifi
+import json
 
+APIKEY ="NCq45AyK8rI9oKTmsj4pPzau0dE8bRxd"
 
 def get_historical_prices(tickerSymbol,start_date=None,end_date=None):
     # if start date or endate are not provide default the values 
@@ -16,6 +20,8 @@ def get_historical_prices(tickerSymbol,start_date=None,end_date=None):
 
     # Fetch data from yf api 
     stock_data = yf.download(stock_symbol, start=start_date, end=end_date)
+    stock_data = stock_data.reset_index()
+    stock_data.rename(columns={'index': 'Date'}, inplace=True)
     return stock_data
 
 
@@ -110,3 +116,17 @@ def get_price_sentiment_correlation(ticker,start_date, end_date):
     merged_data_cl = merged_data.dropna()
 
     return merged_data[merged_data['sentiment'] != 0]
+
+
+def get_ticker_list(search_Symbol=None): 
+    url = ("https://financialmodelingprep.com/api/v3/stock/list?apikey="+ APIKEY)
+    response = urlopen(url, cafile=certifi.where())
+    data = response.read().decode("utf-8")
+    df =pd.read_json(data)
+    
+    if search_Symbol != None:
+         return df[df['symbol'].str.contains(search_Symbol, case=False, na=False)]
+    return df
+
+    # url = ("https://financialmodelingprep.com/api/v3/stock/list?apikey=YOUR_API_KEY")
+    # print(get_jsonparsed_data(url))
